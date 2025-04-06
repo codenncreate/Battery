@@ -1,5 +1,5 @@
 cookie:
-  expiry_days: 1
+  expiry_days: 10
   key: battery@100
   name: admin
 credentials:
