@@ -45,6 +45,7 @@ st.title("Battery Analytics Dashboard")
 markdown_text = """
 ##### Welcome!
 
+This dashboard provides comprehensive insights into battery performance and health. Here's what you can do:
 - **Interactive Visualizations**: Monitor battery health and usage trends with real-time charts.
 - **User-Friendly Interface**: Customize your analytics with easy-to-use filters.
 - **Actionable Insights**: Predict battery lifespan and optimize performance.
