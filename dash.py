@@ -48,7 +48,6 @@ markdown_text = """
 - **Interactive Visualizations**: Monitor battery health and usage trends with real-time charts.
 - **User-Friendly Interface**: Customize your analytics with easy-to-use filters.
 - **Actionable Insights**: Predict battery lifespan and optimize performance.
-- **Models Developed**: Decision Trees, XGBoost, RNN etc.
 """
 
 st.sidebar.title("Load Data for Analysis")
