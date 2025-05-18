@@ -430,8 +430,8 @@ if st.session_state.get('authentication_status'):
                             time.sleep(0.5) # Simulate time
                         st.spinner()
                         
-                        df_pred.to_csv("predictions.csv", index=False)
-                        st.success("The predictions file has been downloaded successfully.")
+                        # df_pred.to_csv("predictions.csv", index=False)
+                        # st.success("The predictions file has been downloaded successfully.")
                 else:
                     st.info("No batteries found in the data to make predictions for.")
 
