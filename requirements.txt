@@ -8,5 +8,6 @@ scikit-learn==1.5.1
 scipy==1.13.1
 streamlit-authenticator==0.4.2
 shap==0.47.2
+xgboost==3.0.0
 google-cloud-aiplatform 
 google-cloud-logging  
