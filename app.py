@@ -38,7 +38,7 @@ except Exception as e:
     st.error(e)
 
 # --- Helper function for SOH comparison (cached) ---
-@st.cache_data
+# @st.cache_data
 def calculate_soh_comparison(_df_input_actual_soh, _model_input):
     # _df_input_actual_soh is the dataframe with the true 'SOH' values
     # _model_input is the trained model
@@ -151,7 +151,7 @@ if st.session_state.get('authentication_status'):
             st.session_state.show_markdown = False
             st.session_state.insights_generated = True
 
-            @st.cache_data # Cache data loading
+            # @st.cache_data # Cache data loading
             def load_data(file):
                 try:
                     data = pd.read_csv(file)
