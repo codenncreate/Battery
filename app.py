@@ -484,7 +484,7 @@ if st.session_state.get('authentication_status'):
                     st.spinner()
                     
                     df_ne.to_csv("predictions.csv", index=False)
-                    st.success("The predictions file has been downloaded successfully.")
+                    # st.success("The predictions file has been downloaded successfully.")
             else:
                 st.info("No batteries found in the data to make predictions for.")
 
