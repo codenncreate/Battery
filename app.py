@@ -294,191 +294,199 @@ if st.session_state.get('authentication_status'):
                     time.sleep(0.5)
                 st.spinner() # Clear spinner
 
-        # --- Analysis Type Selection ---
-        st.session_state.analysis_type = st.radio(
-            "Select Analysis Type:",
-            ("Model Performance", "Model Predictions"),
-            horizontal=True,
-            key='analysis_type_radio', # Explicit key
-            index=["Model Performance", "Model Predictions"].index(st.session_state.analysis_type) # Persist selection
-        )
+        # # --- Analysis Type Selection ---
+        # st.session_state.analysis_type = st.radio(
+        #     "Select Analysis Type:",
+        #     ("Model Performance", "Model Predictions"),
+        #     horizontal=True,
+        #     key='analysis_type_radio', # Explicit key
+        #     index=["Model Performance", "Model Predictions"].index(st.session_state.analysis_type) # Persist selection
+        # )
         
         # --- Model Performance Section ---
-        if st.session_state.analysis_type == 'Model Performance':
-            st.write("## Model Performance")
-            results_perf_df = st.session_state.results_df # Use pre-calculated results
+        # if st.session_state.analysis_type == 'Model Performance':
+        st.write("## Model Performance")
+        results_perf_df = st.session_state.results_df # Use pre-calculated results
 
-            if results_perf_df is None or results_perf_df.empty:
-                st.warning("Model performance data could not be generated. Please check data and model.")
-            else:
-                st.write("#### Overall")
-                with st.spinner('Generating overall performance plots...'):
-                    progress_bar_mp = st.progress(0)
-                    mp_steps = 3
-                    col4, col5, col6 = st.columns(3)
-                    xy = results_perf_df[['Actual SOH', 'Predicted SOH']].min().min()
-                    with col4:
-                        fig = px.scatter(results_perf_df, x='Actual SOH', y='Predicted SOH', title='Actual vs Predicted SOH', opacity=0.6)
-                        fig.add_trace(go.Scatter(x=[xy,1], y=[xy,1], mode='lines', name='Ideal', line=dict(color='red', dash='dash')))
-                        fig.update_layout(legend_title_text="Legend") # Changed from Battery
-                        st.plotly_chart(fig, use_container_width=True)
-                        progress_bar_mp.progress(1/mp_steps); time.sleep(0.5)
-                    
-                    with col5: # SHAP Plot
-                        X_shap = df[['cycle','voltage_measured', 'current_measured', 'temperature_measured', 'time']].copy()
-                        explainer = shap.TreeExplainer(model)
-                        shap_values = explainer.shap_values(X_shap)
-                        shap_df = pd.DataFrame(shap_values, columns=X_shap.columns)
-                        shap_importance = shap_df.abs().mean().sort_values(ascending=False)
-                        fig_shap = go.Figure()
-                        fig_shap.add_trace(go.Bar(x=shap_importance.values[::-1], y=shap_importance.index[::-1], orientation='h', name='Mean |SHAP|'))
-                        fig_shap.update_layout(title='SHAP Feature Importance', xaxis_title='Mean |SHAP Value|', yaxis_title='Feature', template='plotly_dark')
-                        st.plotly_chart(fig_shap, use_container_width=True)
-                        progress_bar_mp.progress(2/mp_steps); time.sleep(0.5)
+        if results_perf_df is None or results_perf_df.empty:
+            st.warning("Model performance data could not be generated. Please check data and model.")
+        else:
+            st.write("#### Overall")
+            with st.spinner('Generating overall performance plots...'):
+                progress_bar_mp = st.progress(0)
+                mp_steps = 3
+                col4, col5, col6 = st.columns(3)
+                xy = results_perf_df[['Actual SOH', 'Predicted SOH']].min().min()
+                with col4:
+                    fig = px.scatter(results_perf_df, x='Actual SOH', y='Predicted SOH', title='Actual vs Predicted SOH', opacity=0.6)
+                    fig.add_trace(go.Scatter(x=[xy,1], y=[xy,1], mode='lines', name='Ideal', line=dict(color='red', dash='dash')))
+                    fig.update_layout(legend_title_text="Legend") # Changed from Battery
+                    st.plotly_chart(fig, use_container_width=True)
+                    progress_bar_mp.progress(1/mp_steps); time.sleep(0.5)
+                
+                with col5: # SHAP Plot
+                    X_shap = df[['cycle','voltage_measured', 'current_measured', 'temperature_measured', 'time']].copy()
+                    explainer = shap.TreeExplainer(model)
+                    shap_values = explainer.shap_values(X_shap)
+                    shap_df = pd.DataFrame(shap_values, columns=X_shap.columns)
+                    shap_importance = shap_df.abs().mean().sort_values(ascending=False)
+                    fig_shap = go.Figure()
+                    fig_shap.add_trace(go.Bar(x=shap_importance.values[::-1], y=shap_importance.index[::-1], orientation='h', name='Mean |SHAP|'))
+                    fig_shap.update_layout(title='SHAP Feature Importance', xaxis_title='Mean |SHAP Value|', yaxis_title='Feature', template='plotly_dark')
+                    st.plotly_chart(fig_shap, use_container_width=True)
+                    progress_bar_mp.progress(2/mp_steps); time.sleep(0.5)
 
-                    with col6: # Residuals Plot
-                        residuals = results_perf_df['Actual SOH'] - results_perf_df['Predicted SOH']
-                        fig_res = go.Figure()
-                        fig_res.add_trace(go.Scatter(x=results_perf_df['Cycle'], y=residuals, mode='markers', name='Residuals', marker=dict(color='purple', size=10, opacity=0.6)))
-                        if not results_perf_df.empty:
-                            fig_res.add_trace(go.Scatter(x=[min(results_perf_df['Cycle']), max(results_perf_df['Cycle'])], y=[0, 0], mode='lines', name='Zero Line', line=dict(color='black', dash='dash')))
-                        fig_res.update_layout(title="Residuals vs Cycle", xaxis_title="Cycle", yaxis_title="Residual (Actual - Predicted)", showlegend=True, template="plotly_dark")
-                        st.plotly_chart(fig_res, use_container_width=True)
-                        progress_bar_mp.progress(3/mp_steps); time.sleep(0.5)
+                with col6: # Residuals Plot
+                    residuals = results_perf_df['Actual SOH'] - results_perf_df['Predicted SOH']
+                    fig_res = go.Figure()
+                    fig_res.add_trace(go.Scatter(x=results_perf_df['Cycle'], y=residuals, mode='markers', name='Residuals', marker=dict(color='purple', size=10, opacity=0.6)))
+                    if not results_perf_df.empty:
+                        fig_res.add_trace(go.Scatter(x=[min(results_perf_df['Cycle']), max(results_perf_df['Cycle'])], y=[0, 0], mode='lines', name='Zero Line', line=dict(color='black', dash='dash')))
+                    fig_res.update_layout(title="Residuals vs Cycle", xaxis_title="Cycle", yaxis_title="Residual (Actual - Predicted)", showlegend=True, template="plotly_dark")
+                    st.plotly_chart(fig_res, use_container_width=True)
+                    progress_bar_mp.progress(3/mp_steps); time.sleep(0.5)
+                st.spinner()
+
+            st.write("#### Battery-wise")
+            unique_batteries_perf = results_perf_df['Battery'].unique()
+            if len(unique_batteries_perf) > 0:
+                with st.spinner('Generating battery-wise performance plots...'):
+                    progress_bar_bp = st.progress(0)
+                    bp_steps = len(unique_batteries_perf) * 3
+                    plot_counter = 0
+
+                    for battery_id in unique_batteries_perf:
+                        st.subheader(f"Battery: {battery_id}")
+                        battery_specific_df = results_perf_df[results_perf_df['Battery'] == battery_id]
+                        if battery_specific_df.empty: continue
+
+                        xy = battery_specific_df[['Actual SOH', 'Predicted SOH']].min().min()
+                        col7, col8, col9 = st.columns(3)
+                        with col7:
+                            fig = px.scatter(battery_specific_df, x='Actual SOH', y='Predicted SOH', title='Actual vs Predicted SOH', opacity=0.6)
+                            fig.add_trace(go.Scatter(x=[xy, 1], y=[xy, 1], mode='lines', name='Ideal', line=dict(color='red', dash='dash')))
+                            st.plotly_chart(fig, use_container_width=True)
+                            plot_counter+=1; progress_bar_bp.progress(plot_counter/bp_steps); time.sleep(0.2)
+                        with col8:
+                            fig = go.Figure()
+                            fig.add_trace(go.Scatter(x=battery_specific_df['Cycle'], y=battery_specific_df['Actual SOH'], mode='lines', name='Actual SOH', marker=dict(color='blue', size=10, opacity=0.7)))
+                            fig.add_trace(go.Scatter(x=battery_specific_df['Cycle'], y=battery_specific_df['Predicted SOH'], mode='lines', name='Predicted SOH', marker=dict(color='orange', size=10, opacity=0.7, symbol='circle')))
+                            fig.update_layout(title="Actual vs Predicted SOH Over Cycles", xaxis_title="Cycle", yaxis_title="SOH", showlegend=True, template="plotly_dark", yaxis=dict(range=[0,1]))
+                            st.plotly_chart(fig, use_container_width=True)
+                            plot_counter+=1; progress_bar_bp.progress(plot_counter/bp_steps); time.sleep(0.2)
+                        with col9:
+                            residuals_battery = battery_specific_df['Actual SOH'] - battery_specific_df['Predicted SOH']
+                            fig = go.Figure()
+                            fig.add_trace(go.Scatter(x=battery_specific_df['Cycle'], y=residuals_battery, mode='markers', name='Residuals', marker=dict(color='purple', size=10, opacity=0.6)))
+                            fig.add_trace(go.Scatter(x=[min(battery_specific_df['Cycle']), max(battery_specific_df['Cycle'])], y=[0, 0], mode='lines', name='Zero Line', line=dict(color='black', dash='dash')))
+                            fig.update_layout(title="Residuals vs Cycle", xaxis_title="Cycle", yaxis_title="Residual", showlegend=True, template="plotly_dark")
+                            st.plotly_chart(fig, use_container_width=True)
+                            plot_counter+=1; progress_bar_bp.progress(plot_counter/bp_steps); time.sleep(0.2)
                     st.spinner()
-
-                st.write("#### Battery-wise")
-                unique_batteries_perf = results_perf_df['Battery'].unique()
-                if len(unique_batteries_perf) > 0:
-                    with st.spinner('Generating battery-wise performance plots...'):
-                        progress_bar_bp = st.progress(0)
-                        bp_steps = len(unique_batteries_perf) * 3
-                        plot_counter = 0
-
-                        for battery_id in unique_batteries_perf:
-                            st.subheader(f"Battery: {battery_id}")
-                            battery_specific_df = results_perf_df[results_perf_df['Battery'] == battery_id]
-                            if battery_specific_df.empty: continue
-
-                            xy = battery_specific_df[['Actual SOH', 'Predicted SOH']].min().min()
-                            col7, col8, col9 = st.columns(3)
-                            with col7:
-                                fig = px.scatter(battery_specific_df, x='Actual SOH', y='Predicted SOH', title='Actual vs Predicted SOH', opacity=0.6)
-                                fig.add_trace(go.Scatter(x=[xy, 1], y=[xy, 1], mode='lines', name='Ideal', line=dict(color='red', dash='dash')))
-                                st.plotly_chart(fig, use_container_width=True)
-                                plot_counter+=1; progress_bar_bp.progress(plot_counter/bp_steps); time.sleep(0.2)
-                            with col8:
-                                fig = go.Figure()
-                                fig.add_trace(go.Scatter(x=battery_specific_df['Cycle'], y=battery_specific_df['Actual SOH'], mode='lines', name='Actual SOH', marker=dict(color='blue', size=10, opacity=0.7)))
-                                fig.add_trace(go.Scatter(x=battery_specific_df['Cycle'], y=battery_specific_df['Predicted SOH'], mode='lines', name='Predicted SOH', marker=dict(color='orange', size=10, opacity=0.7, symbol='circle')))
-                                fig.update_layout(title="Actual vs Predicted SOH Over Cycles", xaxis_title="Cycle", yaxis_title="SOH", showlegend=True, template="plotly_dark", yaxis=dict(range=[0,1]))
-                                st.plotly_chart(fig, use_container_width=True)
-                                plot_counter+=1; progress_bar_bp.progress(plot_counter/bp_steps); time.sleep(0.2)
-                            with col9:
-                                residuals_battery = battery_specific_df['Actual SOH'] - battery_specific_df['Predicted SOH']
-                                fig = go.Figure()
-                                fig.add_trace(go.Scatter(x=battery_specific_df['Cycle'], y=residuals_battery, mode='markers', name='Residuals', marker=dict(color='purple', size=10, opacity=0.6)))
-                                fig.add_trace(go.Scatter(x=[min(battery_specific_df['Cycle']), max(battery_specific_df['Cycle'])], y=[0, 0], mode='lines', name='Zero Line', line=dict(color='black', dash='dash')))
-                                fig.update_layout(title="Residuals vs Cycle", xaxis_title="Cycle", yaxis_title="Residual", showlegend=True, template="plotly_dark")
-                                st.plotly_chart(fig, use_container_width=True)
-                                plot_counter+=1; progress_bar_bp.progress(plot_counter/bp_steps); time.sleep(0.2)
-                        st.spinner()
-                else:
-                    st.info("No battery-specific performance data to display.")
+            else:
+                st.info("No battery-specific performance data to display.")
 
 
         # --- Model Predictions Section ---
-        elif st.session_state.analysis_type == 'Model Predictions':
-            st.write("## Model Predictions")
-            
-            def extend_cycles_to_150(df, cycle_col='cycle', battery_col='battery',
-                         max_target_cycle=150):
-                """
-                For each battery, copy the rows from its last recorded cycle and append
-                them with cycle numbers (last+1 … max_target_cycle).
-                """
-                pieces = [df]                       # keep original data
+        
+        st.write("## Model Predictions")
+        cyc = st.slider(
+                label="Cycle to predict up to",
+                min_value=df['cycle'].max()+1,
+                max_value=200,
+                value=150,     # default position
+                step=1,
+                help="Move the slider or type a number (1 – 200)"
+            )
+        def extend_cycles_to_150(df, cycle_col='cycle', battery_col='battery',
+                        max_target_cycle=150):
+            """
+            For each battery, copy the rows from its last recorded cycle and append
+            them with cycle numbers (last+1 … max_target_cycle).
+            """
+            pieces = [df]                       # keep original data
 
-                for bat, grp in df.groupby(battery_col):
-                    last_cycle = grp[cycle_col].max()
-                    if last_cycle >= max_target_cycle:
-                        continue                    # already long enough
+            for bat, grp in df.groupby(battery_col):
+                last_cycle = grp[cycle_col].max()
+                if last_cycle >= max_target_cycle:
+                    continue                    # already long enough
 
-                    # rows of the last existing cycle
-                    base_rows = grp[grp[cycle_col] == last_cycle]
+                # rows of the last existing cycle
+                base_rows = grp[grp[cycle_col] == last_cycle]
 
-                    # build one DataFrame per new cycle
-                    new_blocks = []
-                    for c in range(last_cycle + 1, max_target_cycle + 1):
-                        tmp = base_rows.copy()
-                        tmp[cycle_col] = c
-                        new_blocks.append(tmp)
+                # build one DataFrame per new cycle
+                new_blocks = []
+                for c in range(last_cycle + 1, max_target_cycle + 1):
+                    tmp = base_rows.copy()
+                    tmp[cycle_col] = c
+                    new_blocks.append(tmp)
 
-                    pieces.append(pd.concat(new_blocks, ignore_index=True))
+                pieces.append(pd.concat(new_blocks, ignore_index=True))
 
-                # return everything glued together
-                return pd.concat(pieces, ignore_index=True)
-            # Predictions are made on the original df
-            df_pred = df.copy() # Work on a copy
-            df_ne = df_pred.drop(columns='SOH')
-            df_ne = extend_cycles_to_150(df_ne)
-            features_to_predict = ['cycle', 'voltage_measured', 'current_measured', 'temperature_measured', 'time']
-            
-            if not all(col in df_pred.columns for col in features_to_predict):
-                st.error(f"One or more required columns for prediction are missing: {features_to_predict}")
+            # return everything glued together
+            return pd.concat(pieces, ignore_index=True)
+        # Predictions are made on the original df
+        df_pred = df.copy() # Work on a copy
+        df_ne = df_pred.drop(columns='SOH')
+        df_ne = extend_cycles_to_150(df_ne, max_target_cycle=cyc)
+        features_to_predict = ['cycle', 'voltage_measured', 'current_measured', 'temperature_measured', 'time']
+        
+        if not all(col in df_pred.columns for col in features_to_predict):
+            st.error(f"One or more required columns for prediction are missing: {features_to_predict}")
+        else:
+            soh_predicted_values = model.predict(df_ne[features_to_predict])
+            df_ne['SOH_predicted'] = soh_predicted_values
+            df_ne['SOH_predicted'] = df_ne['SOH_predicted'].round(2).clip(upper=1)
+
+            unique_batteries_pred = df_ne['battery'].unique()
+            if len(unique_batteries_pred) > 0:
+                with st.spinner('Generating prediction plots...'):
+                    progress_bar_pred = st.progress(0)
+                    pred_steps = len(unique_batteries_pred)
+                    
+                    for idx, battery_id_pred in enumerate(unique_batteries_pred, start=1):
+                        st.subheader(f"Battery: {battery_id_pred}")
+                        battery_df_for_pred_plot = df_ne[df_ne['battery'] == battery_id_pred]
+                        
+                        if battery_df_for_pred_plot.empty: continue
+
+                        avg_soh_per_cycle = battery_df_for_pred_plot.groupby('cycle')[['SOH_predicted']].mean().reset_index()
+                        avg_soh_per_cycle['SOH_predicted'] = avg_soh_per_cycle['SOH_predicted'].round(2).clip(upper=1)
+
+                        # Display in a single column for this section
+                        fig_pred_plot = go.Figure()
+                        fig_pred_plot.add_trace(go.Scatter(x=avg_soh_per_cycle['cycle'], y=avg_soh_per_cycle['SOH_predicted'], mode='lines',
+                                                    name='Predicted SOH', marker=dict(size=10, opacity=0.7, symbol='circle')))
+                        fig_pred_plot.add_trace(go.Scatter(
+                            x=[min(avg_soh_per_cycle['cycle']), max(avg_soh_per_cycle['cycle'])],  # Range of x-axis
+                            y=[0.7, 0.7],
+                            mode='lines', 
+                            name='SOH = 0.7', 
+                            line=dict(color='red', dash='dash')
+                        ))
+
+                        # Update the layout
+                        fig_pred_plot.update_layout(
+                            title="Predicted SOH Over Cycles", 
+                            xaxis_title="Cycle", 
+                            yaxis_title="Predicted SOH",
+                            showlegend=True, 
+                            xaxis=dict(range=[0, max(avg_soh_per_cycle['cycle'])]),
+                            yaxis=dict(range=[0, 1]), 
+                            template="plotly_dark"
+                        )
+                        if not avg_soh_per_cycle.empty: # Add x-axis range if data exists
+                            fig_pred_plot.update_layout(xaxis=dict(range=[0, max(avg_soh_per_cycle['cycle'])]))
+                        
+                        st.plotly_chart(fig_pred_plot, use_container_width=True)
+                        progress_bar_pred.progress(idx / pred_steps)
+                        time.sleep(0.5) # Simulate time
+                    st.spinner()
+                    
+                    df_ne.to_csv("predictions.csv", index=False)
+                    st.success("The predictions file has been downloaded successfully.")
             else:
-                soh_predicted_values = model.predict(df_ne[features_to_predict])
-                df_ne['SOH_predicted'] = soh_predicted_values
-                df_ne['SOH_predicted'] = df_ne['SOH_predicted'].round(2).clip(upper=1)
-
-                unique_batteries_pred = df_ne['battery'].unique()
-                if len(unique_batteries_pred) > 0:
-                    with st.spinner('Generating prediction plots...'):
-                        progress_bar_pred = st.progress(0)
-                        pred_steps = len(unique_batteries_pred)
-                        
-                        for idx, battery_id_pred in enumerate(unique_batteries_pred, start=1):
-                            st.subheader(f"Battery: {battery_id_pred}")
-                            battery_df_for_pred_plot = df_ne[df_ne['battery'] == battery_id_pred]
-                            
-                            if battery_df_for_pred_plot.empty: continue
-
-                            avg_soh_per_cycle = battery_df_for_pred_plot.groupby('cycle')[['SOH_predicted']].mean().reset_index()
-                            avg_soh_per_cycle['SOH_predicted'] = avg_soh_per_cycle['SOH_predicted'].round(2).clip(upper=1)
-
-                            # Display in a single column for this section
-                            fig_pred_plot = go.Figure()
-                            fig_pred_plot.add_trace(go.Scatter(x=avg_soh_per_cycle['cycle'], y=avg_soh_per_cycle['SOH_predicted'], mode='lines',
-                                                        name='Predicted SOH', marker=dict(size=10, opacity=0.7, symbol='circle')))
-                            fig_pred_plot.add_trace(go.Scatter(
-                                x=[min(avg_soh_per_cycle['cycle']), max(avg_soh_per_cycle['cycle'])],  # Range of x-axis
-                                y=[0.7, 0.7],
-                                mode='lines', 
-                                name='SOH = 0.7', 
-                                line=dict(color='red', dash='dash')
-                            ))
-
-                            # Update the layout
-                            fig_pred_plot.update_layout(
-                                title="Predicted SOH Over Cycles", 
-                                xaxis_title="Cycle", 
-                                yaxis_title="Predicted SOH",
-                                showlegend=True, 
-                                yaxis=dict(range=[0, 1]), 
-                                template="plotly_dark"
-                            )
-                            if not avg_soh_per_cycle.empty: # Add x-axis range if data exists
-                                fig_pred_plot.update_layout(xaxis=dict(range=[0, max(avg_soh_per_cycle['cycle'])]))
-                            
-                            st.plotly_chart(fig_pred_plot, use_container_width=True)
-                            progress_bar_pred.progress(idx / pred_steps)
-                            time.sleep(0.5) # Simulate time
-                        st.spinner()
-                        
-                        df_ne.to_csv("predictions.csv", index=False)
-                        st.success("The predictions file has been downloaded successfully.")
-                else:
-                    st.info("No batteries found in the data to make predictions for.")
+                st.info("No batteries found in the data to make predictions for.")
 
     elif uploaded_file is None: # No file uploaded yet
         st.sidebar.info("Please upload a CSV file to get started.")
